@@ -1,2 +1,2 @@
 # scaffold-tpl
-generate  a standard web project
+generate a standard web project
