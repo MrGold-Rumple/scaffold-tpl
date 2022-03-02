@@ -11,3 +11,9 @@ generate a standard web project
 
 - Project Preview
 ![preview](./images/project.png)
+
+
+## Todo
+    - support no sql
+    - append app
+    - fix : module name startwith github.com/xxx will error
