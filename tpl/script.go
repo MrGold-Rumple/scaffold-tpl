@@ -68,3 +68,26 @@ COPY ./config/${config}.yaml ./config/config.yaml
 COPY ./static ./static
 CMD ./{{.BinName}}
 `
+
+type ConfigYamlParam struct {
+	Db     string
+	DbName string
+}
+
+const ConfigYaml = `
+{{if eq .Db "mysql"}}
+mysql:
+  user: "root"
+  pass: "mysql"
+  host: "localhost"
+  port: 3306
+  db: "{{.DbName}}"
+{{else}}
+postgres:
+  user: "postgres"
+  pass: "postgres"
+  host: "localhost"
+  port: 5432
+  db: "{{.DbName}}"
+{{end}}
+`

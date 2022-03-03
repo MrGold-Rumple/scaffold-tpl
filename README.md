@@ -1,19 +1,21 @@
 # scaffold-tpl
+
 generate a standard web project
 
 - Usage
-
-![usage](./images/usage.png)
-
+  ![usage](./images/usage.png)
 
 - Example
-![command](./images/command.png)
+  ![command](./images/command.png)
 
 - Project Preview
-![preview](./images/project.png)
-
+  ![preview](./images/project.png)
 
 ## Todo
+
     - support no sql
     - append app
-    - fix : module name startwith github.com/xxx will error
+
+## Attention
+
+    - module name not support github.com/xxx/xxx (go mod tidy will failed)

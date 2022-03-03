@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"text/template"
 
@@ -211,7 +212,8 @@ func Generate() (err error) {
 	session := newSession(flagProjectDir)
 	goModInit(session)
 
-	console.Info(fmt.Sprintf("start init project %s, db %+v, nosql %+v, module name %s, apps %+v", flagProjectDir, flagDb, flagNosqlList, flagModName, flagApps))
+	console.Info(fmt.Sprintf("start init project %s, db %+v, nosql %+v, module name %s, apps %+v",
+		flagProjectDir, flagDb, flagNosqlList, flagModName, flagApps))
 	// 目录已经生成
 	apiDir := path.Join(flagProjectDir, "api")
 	apiBase := path.Join(apiDir, "base")
@@ -227,7 +229,13 @@ func Generate() (err error) {
 	console.Info(fmt.Sprintf("start create all dir %+v", needMkDirs))
 	makeAllDir(needMkDirs)
 
-	newFile(path.Join(confDir, "config.yaml"), "")
+	// newFile(path.Join(confDir, "config.yaml"), "")
+
+	scriptSubfix := "ps1"
+
+	if runtime.GOOS != "windows" {
+		scriptSubfix = "sh"
+	}
 
 	tasks := []Task{{
 		Name:     "Dockerfile",
@@ -248,7 +256,7 @@ func Generate() (err error) {
 		Tpl:      tpl.Readme,
 	}, {
 		Name:     "dockerBuildScript",
-		Filename: path.Join(flagProjectDir, "t.ps1"),
+		Filename: path.Join(flagProjectDir, "t."+scriptSubfix),
 		Tpl:      tpl.BuildScript,
 		Data: tpl.DockerBuildParam{
 			ContainerName: flagProjectDir + "-crt",
@@ -258,7 +266,7 @@ func Generate() (err error) {
 		},
 	}, {
 		Name:     "swaggerScript",
-		Filename: path.Join(flagProjectDir, "gen-swagger.ps1"),
+		Filename: path.Join(flagProjectDir, "gen-swagger."+scriptSubfix),
 		Tpl:      tpl.GenSwagger,
 	}}
 
@@ -335,7 +343,15 @@ func Generate() (err error) {
 			Data:     tpl.ModuleParam{ModuleName: flagModName},
 		}
 	}
-
+	tasks = append(tasks, Task{
+		Name:     "yamlConfig",
+		Filename: path.Join(confDir, "config.yaml"),
+		Tpl:      tpl.ConfigYaml,
+		Data: tpl.ConfigYamlParam{
+			Db:     cp.JsonTag,
+			DbName: flagProjectDir,
+		},
+	})
 	tasks = append(tasks, dbTask)
 
 	// internal/config.go
@@ -353,9 +369,9 @@ func Generate() (err error) {
 		generateApp(apiDir, appName, flagModName)
 	}
 
-	goModTidy(session)
-
-	swaggerInit(session)
+	// goModTidy(session)
+	//
+	// swaggerInit(session)
 
 	console.Info("Done!")
 	return nil
