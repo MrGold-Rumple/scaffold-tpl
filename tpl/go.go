@@ -17,22 +17,34 @@ const MainGo = `
 package main
 
 import (
+	"log"
+
 	"github.com/wuruipeng404/scaffold"
 	"github.com/wuruipeng404/scaffold/logger"
+	"github.com/wuruipeng404/scaffold/orm"
+	"{{.ModuleName}}/model"
 	"{{.ModuleName}}/api"
-	{{range $i,$v := .AppList}}
-	"{{$v}}"
-	{{end}}
-	"{{.ModuleName}}/internal/db"
 )
 
 func init() {
 	logger.InitLogger("log/{{.LogFileName}}.log")
+
+	if err := orm.Init(&orm.InitOption{
+		Type:   "",
+		User:   "",
+		Pass:   "",
+		DbName: "",
+		Host:   "",
+		Port:   0,
+	}); err != nil {
+		log.Fatalf("init orm error:%s", err)
+	}
+
 	migrate()
 }
 
 func migrate() {
-	if err := db.ORM().AutoMigrate(
+	if err := orm.C().AutoMigrate(
 		{{range $i,$v := .AppModelList}}
 		new({{$v}}),
 		{{end}}
@@ -187,25 +199,8 @@ type BackQuote struct {
 	BQ string
 }
 
-const BaseModelGo = `
-package base
-
-import (
-	"time"
-
-	"gorm.io/gorm"
-)
-
-type Model struct {
-	ID        uint           {{.BQ}}gorm:"primarykey" json:"id"{{.BQ}}
-	CreatedAt time.Time      {{.BQ}}json:"created_at"{{.BQ}}
-	UpdatedAt time.Time      {{.BQ}}json:"updated_at"{{.BQ}}
-	DeletedAt gorm.DeletedAt {{.BQ}}gorm:"index" json:"-"{{.BQ}}
-}
-`
-
 const BaseRequestGo = `
-package base
+package protocol
 
 type PageParam struct {
 	Page     int {{.BQ}}form:"page,default=1" binding:"gt=0"{{.BQ}}

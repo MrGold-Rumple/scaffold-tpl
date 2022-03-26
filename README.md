@@ -1,6 +1,8 @@
 # scaffold-tpl
 
-generate a standard web project
+Generate a standard web project command line scaffold tool
+
+Base on [github.com/wuruipeng404/scaffold](github.com/wuruipeng404/scaffold)
 
 - Usage
   ![usage](./images/usage.png)
@@ -8,13 +10,15 @@ generate a standard web project
 - Example
   ![command](./images/command.png)
 
-- Project Preview
+- Generate Project Preview
   ![preview](./images/project.png)
 
 ## Todo
 
     - support no sql
-    - append app
+    - append app 
+    - optimization config parse
+    - add env config support
 
 ## Attention
 

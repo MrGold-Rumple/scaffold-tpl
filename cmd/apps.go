@@ -31,7 +31,7 @@ func init() {
 	// rootCmd.AddCommand(appCmd)
 }
 
-func generateApp(apiDir, name, modName string) {
+func generateApp(modelDir, apiDir, name, modName string) {
 
 	appName := strings.ToLower(name)
 	appTitle := strings.Title(appName)
@@ -39,7 +39,7 @@ func generateApp(apiDir, name, modName string) {
 	appDir := path.Join(apiDir, appName)
 	checkDir(appDir)
 
-	// files := []string{"controller.go", "data_language.go", "model.go", "structure.go"}
+	// files := []string{"controller.go", "dal.go", "protocol.go"}
 
 	appParam := tpl.AppParam{
 		AppName:    appName,
@@ -48,28 +48,28 @@ func generateApp(apiDir, name, modName string) {
 		ModuleName: modName,
 	}
 
-	tasks := []Task{{
-		Name:     "DL",
-		Filename: path.Join(appDir, "data_language.go"),
+	tasks := []GenTask{{
+		Name:     "Dal",
+		Filename: path.Join(appDir, "dal.go"),
 		Tpl:      tpl.GoOnlyPkgFile,
 		Data: tpl.GoPkgFileParam{
 			PkgName: appName,
 			Comment: "// define your DQL DML",
 		},
 	}, {
-		Name:     "model",
-		Filename: path.Join(appDir, "model.go"),
-		Tpl:      tpl.AppModelGO,
-		Data:     appParam,
-	}, {
-		Name:     "structure",
-		Filename: path.Join(appDir, "structure.go"),
-		Tpl:      tpl.AppStructureGO,
+		Name:     "protocol",
+		Filename: path.Join(appDir, "protocol.go"),
+		Tpl:      tpl.AppProtocolGO,
 		Data:     appParam,
 	}, {
 		Name:     "controller",
 		Filename: path.Join(appDir, "controller.go"),
 		Tpl:      tpl.AppControllerGo,
+		Data:     appParam,
+	}, {
+		Name:     "model",
+		Filename: path.Join(modelDir, appName+".go"),
+		Tpl:      tpl.AppModelGO,
 		Data:     appParam,
 	}}
 

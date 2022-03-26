@@ -13,11 +13,12 @@ type AppParam struct {
 	ModuleName string //
 }
 
-const AppStructureGO = `
+const AppProtocolGO = `
 package {{.AppName}}
 
 import (
-	"github.com/wuruipeng404/scaffold/util"
+	"github.com/wuruipeng404/scaffold/swag"
+	"{{.ModuleName}}/model"
 )
 
 type (
@@ -37,28 +38,28 @@ type (
 
 type (
 	_SwagGet{{.AppTitle}}Resp struct {
-		util.SwagBase
-		Data {{.AppTitle}} {{.BQ}}json:"data"{{.BQ}}
+		swag.CodeMsg
+		Data model.{{.AppTitle}} {{.BQ}}json:"data"{{.BQ}}
 	}
 
 	_SwagList{{.AppTitle}}Resp struct {
-		util.SwagBase
-		util.SwagPage
-		Data []{{.AppTitle}} {{.BQ}}json:"data"{{.BQ}}
+		swag.CodeMsg
+		swag.Page
+		Data []model.{{.AppTitle}} {{.BQ}}json:"data"{{.BQ}}
 	}
 )
 
 `
 
 const AppModelGO = `
-package {{.AppName}}
+package model
 
 import (
-	"{{.ModuleName}}/api/base"
+	"github.com/wuruipeng404/scaffold/orm"
 )
 
 type {{.AppTitle}} struct {
-	base.Model
+	orm.Model
 }
 `
 
@@ -68,7 +69,7 @@ package {{.AppName}}
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wuruipeng404/scaffold"
-	"{{.ModuleName}}/api/base"
+	"{{.ModuleName}}/api/protocol"
 )
 
 type Controller struct {
@@ -84,7 +85,7 @@ type Controller struct {
 // @Produce json
 // @Param _{{.AppTitle}}GetParam query _{{.AppTitle}}GetParam true "get parameter"
 // @Success 200 {object} _SwagGet{{.AppTitle}}Resp "request success"
-// @Failure 400 {object} util.SwagBase "request failed"
+// @Failure 400 {object} swag.CodeMsg "request failed"
 // @Router /{{.AppName}} [get]
 func (c *Controller) Get(ctx *gin.Context) {
 	var (
@@ -106,14 +107,14 @@ func (c *Controller) Get(ctx *gin.Context) {
 // @Tags {{.AppTitle}}
 // @Accept json
 // @Produce json
-// @Param base.SearchPageParam query base.SearchPageParam true "search list param"
+// @Param protocol.SearchPageParam query protocol.SearchPageParam true "search list param"
 // @Success 200 {object} _SwagList{{.AppTitle}}Resp "request success"
-// @Failure 400 {object} util.SwagBase "request failed"
+// @Failure 400 {object} swag.CodeMsg "request failed"
 // @Router /{{.AppName}}/list [get]
 func (c *Controller) List(ctx *gin.Context) {
 	var (
 		err error
-		p   base.SearchPageParam
+		p   protocol.SearchPageParam
 	)
 
 	if err = ctx.ShouldBindQuery(&p); err != nil {
@@ -132,7 +133,7 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Produce json
 // @Param _{{.AppTitle}}CreateParam body _{{.AppTitle}}CreateParam true "create parameter"
 // @Success 200 {object} _SwagGet{{.AppTitle}}Resp "request success"
-// @Failure 400 {object} util.SwagBase "request failed"
+// @Failure 400 {object} swag.CodeMsg "request failed"
 // @Router /{{.AppName}} [post]
 func (c *Controller) Create(ctx *gin.Context) {
 	var (
@@ -156,7 +157,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Produce json
 // @Param _{{.AppTitle}}UpdateParam body _{{.AppTitle}}UpdateParam true "update parameter"
 // @Success 200 {object} _SwagGet{{.AppTitle}}Resp "request success"
-// @Failure 400 {object} util.SwagBase "request failed"
+// @Failure 400 {object} swag.CodeMsg "request failed"
 // @Router /{{.AppName}} [put]
 func (c *Controller) Update(ctx *gin.Context) {
 	var (
@@ -177,8 +178,8 @@ func (c *Controller) Update(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param _{{.AppTitle}}DeleteParam query _{{.AppTitle}}DeleteParam true "delete parameter"
-// @Success 200 {object} util.SwagBase "request success"
-// @Failure 400 {object} util.SwagBase "request failed"
+// @Success 200 {object} swag.CodeMsg "request success"
+// @Failure 400 {object} swag.CodeMsg "request failed"
 // @Router /{{.AppName}} [delete]
 func (c *Controller) Delete(ctx *gin.Context) {
 	var (
