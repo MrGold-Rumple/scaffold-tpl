@@ -14,11 +14,7 @@ Base on [github.com/wuruipeng404/scaffold](github.com/wuruipeng404/scaffold)
   ![preview](./images/project.png)
 
 ## Todo
-
     - support no sql
-    - append app 
-    - optimization config parse
-    - add env config support
 
 ## Attention
 

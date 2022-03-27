@@ -37,8 +37,4 @@ scripts/
 .git
 `
 
-const Readme = `
-
-### PowerBy https://github.com/wuruipeng404/scaffold-tpl
-
-`
+const Readme = `### PowerBy https://github.com/wuruipeng404/scaffold-tpl`

@@ -13,17 +13,16 @@ type DockerBuildParam struct {
 	ExportPort    string // 7788
 }
 
-const PowerBuildScript = `
-docker rm -f {{.ContainerName}}
+const PowerBuildScript = `docker rm -f {{.ContainerName}}
 
 docker build -t {{.ImageTag}} {{.BuildArg}} .
 if ($?)
 {
-    Write-Host "构建成功"
+    Write-Host "build success ~~"
 }
 else
 {
-    Write-Host "构建失败,退出"
+    Write-Host "build failed !!"
     exit
 }
 
@@ -31,14 +30,14 @@ docker run -itd --restart=always --name {{.ContainerName}} -p {{.ExportPort}}:80
 docker logs -f {{.ContainerName}}
 `
 
-const BashBuildScript = `
-docker rm -f {{.ContainerName}}
+const BashBuildScript = `docker rm -f {{.ContainerName}}
 
 docker build -t {{.ImageTag}} {{.BuildArg}} .
+
 if [[ "$?" != "0" ]];then
-	echo "build failed"
+	echo "build failed !!"
 else
-	echo "build success"
+	echo "build success ~~"
 fi
 
 docker run -itd --restart=always --name {{.ContainerName}} -p {{.ExportPort}}:8000 {{.ImageTag}}
@@ -51,8 +50,7 @@ type DockerFileParam struct {
 	BinName string
 }
 
-const DockerFileNew = `
-#syntax=docker/dockerfile:latest
+const DockerFile = `#syntax=docker/dockerfile:latest
 FROM golang:latest as builder
 
 WORKDIR /app
@@ -84,56 +82,16 @@ COPY ./config/${config}.yaml ./config/config.yaml
 CMD ./{{.BinName}}
 `
 
-const DockerFile = `
-FROM golang:latest as builder
-
-WORKDIR /home/works
-
-ADD . .
-RUN go build -o bin/{{.BinName}} main.go
-
-FROM alpine:latest
-
-RUN echo "http://mirrors.aliyun.com/alpine/latest-stable/main/" > /etc/apk/repositories \
-    && rm -rf /var/cache/apk/* \
-    && rm -rf /tmp/* \
-    && apk update --allow-untrusted \
-    && apk add --no-cache -U tzdata ca-certificates libc6-compat libgcc libstdc++ --allow-untrusted \
-    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo "Asia/Shanghai" > /etc/timezone \
-    && apk del tzdata
-
-
-WORKDIR /home/works
-
-ARG config
-
-EXPOSE 8000
-ENV GIN_MODE=release
-COPY --from=builder /home/works/bin/ ./
-COPY ./config/${config}.yaml ./config/config.yaml
-CMD ./{{.BinName}}
-`
-
 type ConfigYamlParam struct {
 	Db     string
 	DbName string
 }
 
-const ConfigYaml = `
-{{if eq .Db "mysql"}}
-mysql:
-  user: "root"
-  pass: "mysql"
+const ConfigYaml = `database:
+  type: "{{.Db}}"
+  user: "admin"
+  pass: "admin"
   host: "localhost"
-  port: 3306
+  port: 9527
   db: "{{.DbName}}"
-{{else}}
-postgres:
-  user: "postgres"
-  pass: "postgres"
-  host: "localhost"
-  port: 5432
-  db: "{{.DbName}}"
-{{end}}
 `

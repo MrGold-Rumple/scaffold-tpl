@@ -7,51 +7,21 @@
 package tpl
 
 type MainGoParam struct {
-	ModuleName   string   `json:"module_name"`
-	AppList      []string `json:"app_list"`
-	LogFileName  string   `json:"log_file_name"`
-	AppModelList []string `json:"app_model_list"`
+	ModuleName  string `json:"module_name"`
+	LogFileName string `json:"log_file_name"`
 }
 
 const MainGo = `
 package main
 
 import (
-	"log"
-
 	"github.com/wuruipeng404/scaffold"
 	"github.com/wuruipeng404/scaffold/logger"
-	"github.com/wuruipeng404/scaffold/orm"
-	"{{.ModuleName}}/model"
 	"{{.ModuleName}}/api"
 )
 
 func init() {
 	logger.InitLogger("log/{{.LogFileName}}.log")
-
-	if err := orm.Init(&orm.InitOption{
-		Type:   "",
-		User:   "",
-		Pass:   "",
-		DbName: "",
-		Host:   "",
-		Port:   0,
-	}); err != nil {
-		log.Fatalf("init orm error:%s", err)
-	}
-
-	migrate()
-}
-
-func migrate() {
-	if err := orm.C().AutoMigrate(
-		{{range $i,$v := .AppModelList}}
-		new({{$v}}),
-		{{end}}
-	); err != nil {
-		logger.Fatalf("数据库迁移失败:%s", err)
-	}
-	logger.Info("数据库迁移成功~")
 }
 
 // @title {{.ModuleName}} API Document
@@ -72,7 +42,6 @@ type ConfigParam struct {
 	DbExist bool   //
 	BQ      string // "`"
 	JsonTag string // lowercase(db)
-	DbType  string // _Postgres  _Mysql
 }
 
 const ConfigGo = `
@@ -83,27 +52,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
 
+	"github.com/wuruipeng404/scaffold/orm"
+	"github.com/wuruipeng404/scaffold/util"
 	"gopkg.in/yaml.v2"
 )
 
 var sc *ServerConfig
 
 type ServerConfig struct {
-	{{if .DbExist}}
-	{{.DB}} {{.DbType}} {{.BQ}}yaml:"{{.JsonTag}}" json:"{{.JsonTag}}"{{.BQ}}
-	{{end}}
+	Database *_Database {{.BQ}}yaml:"database" json:"database"{{.BQ}}
 }
-
-{{if .DbExist}}
-type {{.DbType}} struct {
-	User string {{.BQ}}yaml:"user" json:"user"{{.BQ}}
-	Pass string {{.BQ}}yaml:"pass" json:"pass"{{.BQ}}
-	Host string {{.BQ}}yaml:"host" json:"host"{{.BQ}}
-	Port int    {{.BQ}}yaml:"port" json:"port"{{.BQ}}
-	DB   string {{.BQ}}yaml:"db" json:"db"{{.BQ}}
+type _Database struct {
+	Type orm.DbType {{.BQ}}yaml:"type" json:"type"{{.BQ}}
+	User string     {{.BQ}}yaml:"user" json:"user"{{.BQ}}
+	Pass string     {{.BQ}}yaml:"pass" json:"pass"{{.BQ}}
+	Host string     {{.BQ}}yaml:"host" json:"host"{{.BQ}}
+	Port int        {{.BQ}}yaml:"port" json:"port"{{.BQ}}
+	DB   string     {{.BQ}}yaml:"db" json:"db"{{.BQ}}
 }
-{{end}}
 
 func (c *ServerConfig) String() string {
 	b, _ := json.MarshalIndent(c, "", "  ")
@@ -112,16 +80,57 @@ func (c *ServerConfig) String() string {
 
 func init() {
 
-	yf, err := ioutil.ReadFile("./config/config.yaml")
-	if err != nil {
-		log.Fatalf("读取配置文件失败:%s", err)
-	} else {
-		if err = yaml.Unmarshal(yf, &sc); err != nil {
-			log.Fatalf("解析配置文件失败:%s", err)
-		}
+	yf, err := ioutil.ReadFile(util.Env("CONFIG_FILE", "./config/config.yaml"))
+
+	if err == nil {
+		_ = yaml.Unmarshal(yf, &sc)
 	}
 
-	log.Println(fmt.Sprintf("读取配置成功:%+v", sc))
+	if sc == nil {
+		sc = &ServerConfig{}
+	}
+
+	if sc.Database == nil {
+		sc.Database = &_Database{}
+	}
+
+	dbType := util.Env("DB_TYPE", string(orm.MySQL))
+	dbUser := util.Env("DB_USER", "")
+	dbPass := util.Env("DB_PASS", "")
+	dbHost := util.Env("DB_HOST", "")
+	dbPort := util.Env("DB_PORT", "")
+	dbDb := util.Env("DB_NAME", "")
+
+	// environment variables take precedence over configuration files if env is not null
+	if dbType != "" {
+		sc.Database.Type = orm.DbType(dbType)
+	}
+
+	if dbUser != "" {
+		sc.Database.User = dbUser
+	}
+
+	if dbPass != "" {
+		sc.Database.Pass = dbPass
+	}
+
+	if dbHost != "" {
+		sc.Database.Host = dbHost
+	}
+
+	if dbPort != "" {
+		dp, err := strconv.Atoi(dbPort)
+		if err != nil {
+			log.Fatalf("get db port error:%s", err)
+		}
+		sc.Database.Port = dp
+	}
+
+	if dbDb != "" {
+		sc.Database.DB = dbDb
+	}
+
+	log.Println(fmt.Sprintf("reading config :%+v", sc))
 }
 
 func Config() *ServerConfig {
@@ -147,9 +156,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/wuruipeng404/scaffold"
-	{{range $i,$v := .ImportApps}}
-	"{{$v}}"
-	{{end}}
+	{{- range $i,$v := .ImportApps}}
+	"{{$v -}}"
+	{{- end}}
 	_ "{{.ModuleName}}/docs"
 )
 
@@ -170,14 +179,13 @@ func swaggerRouters() {
 	server.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
-// 接口
 func _ApiRouters() {
 	api := server.Group("/api")
 	v1 := api.Group("/v1")
 
-	{{range $i,$v := .Apps}}
-	_{{$v}}Routers(v1)
-	{{end}}
+	{{- range $i,$v := .Apps}}
+	_{{$v -}}Routers(v1)
+	{{- end}}
 }
 
 {{range $i,$v := .Apps}}
@@ -222,4 +230,52 @@ const GoOnlyPkgFile = `
 package {{.PkgName}}
 
 {{.Comment}}
+`
+
+type ModelParam struct {
+	ModuleName   string   `json:"module_name"`
+	AppModelList []string `json:"app_model_list"`
+	DbType       string   `json:"db_type"`
+}
+
+const ModelGo = `
+package model
+
+import (
+	"log"
+
+	"github.com/wuruipeng404/scaffold/orm"
+	"{{.ModuleName}}/internal"
+)
+
+func init() {
+
+	dc := internal.Config().Database
+
+	orm.Init(&orm.InitOption{
+		{{- if eq .DbType "mysql"}}
+		Type:   orm.MySQL,
+		{{- else}}
+		Type:   orm.Postgres,
+		{{- end}}
+		User:   dc.User,
+		Pass:   dc.Pass,
+		Host:   dc.Host,
+		Port:   dc.Port,
+		DbName: dc.DB,
+	})
+
+	migrate()
+}
+
+func migrate() {
+	if err := orm.C().AutoMigrate(
+		{{- range $i,$v := .AppModelList}}
+		new({{$v -}}),
+		{{- end}}
+	); err != nil {
+		log.Fatalf("database auto migrate error:%s", err)
+	}
+	log.Println("database auto migrate success ~~")
+}
 `

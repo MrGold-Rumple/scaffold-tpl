@@ -38,20 +38,20 @@ const (
 )
 
 var (
-	flagProjectDir string
-	flagModName    string
-	flagDb         string
-	flagApps       []string
-	flagNosqlList  []string
+	nFlagDir       string
+	nFlagModName   string
+	nFlagDb        string
+	nFlagApps      []string
+	nFlagNosqlList []string
 )
 
 func init() {
 
-	generateCmd.PersistentFlags().StringVarP(&flagProjectDir, "dir", "c", defaultDir, "the new project dir")
-	generateCmd.PersistentFlags().StringVarP(&flagModName, "module", "m", "", "init go module name, (default same as \"${dir}\")")
-	generateCmd.PersistentFlags().StringVarP(&flagDb, "db", "d", _PostgresFlag, "sql driver pg,mysql")
-	generateCmd.PersistentFlags().StringSliceVarP(&flagApps, "apps", "a", []string{"user"}, "init apps, example -a user,file,category")
-	generateCmd.PersistentFlags().StringSliceVarP(&flagNosqlList, "nosql", "n", []string{}, "init no sql driver -n=mongodb,es,redis")
+	generateCmd.PersistentFlags().StringVarP(&nFlagDir, "dir", "c", defaultDir, "the new project dir")
+	generateCmd.PersistentFlags().StringVarP(&nFlagModName, "module", "m", "", "init go module name, (default same as \"${dir}\")")
+	generateCmd.PersistentFlags().StringVarP(&nFlagDb, "db", "d", _PostgresFlag, "sql driver pg,mysql")
+	generateCmd.PersistentFlags().StringSliceVarP(&nFlagApps, "apps", "a", []string{"user"}, "init apps, example -a user,file,category")
+	generateCmd.PersistentFlags().StringSliceVarP(&nFlagNosqlList, "nosql", "n", []string{}, "init no sql driver -n=mongodb,es,redis")
 
 	rootCmd.AddCommand(generateCmd)
 }
@@ -61,19 +61,18 @@ func Generate() (err error) {
 	if err = _ParamCheck(); err != nil {
 		return err
 	}
-	session := newSession(flagProjectDir)
+	session := newSession(nFlagDir)
 	goModInit(session)
 
 	console.Info(fmt.Sprintf("start init project %s, db %+v, nosql %+v, module name %s, apps %+v",
-		flagProjectDir, flagDb, flagNosqlList, flagModName, flagApps))
-	// 目录已经生成
-	apiDir := path.Join(flagProjectDir, "api")
+		nFlagDir, nFlagDb, nFlagNosqlList, nFlagModName, nFlagApps))
+
+	apiDir := path.Join(nFlagDir, "api")
 	apiProtocol := path.Join(apiDir, "protocol")
-	confDir := path.Join(flagProjectDir, "config")
-	docsDir := path.Join(flagProjectDir, "docs")
-	internal := path.Join(flagProjectDir, "internal")
-	modelDir := path.Join(flagProjectDir, "model")
-	// internalDb := path.Join(internal, "db")
+	confDir := path.Join(nFlagDir, "config")
+	docsDir := path.Join(nFlagDir, "docs")
+	internal := path.Join(nFlagDir, "internal")
+	modelDir := path.Join(nFlagDir, "model")
 
 	needMkDirs := []string{apiProtocol, modelDir, confDir, docsDir, internal}
 
@@ -90,47 +89,45 @@ func Generate() (err error) {
 
 	tasks := []GenTask{{
 		Name:     "Dockerfile",
-		Filename: path.Join(flagProjectDir, "Dockerfile"),
-		Tpl:      tpl.DockerFileNew,
-		Data:     tpl.DockerFileParam{BinName: flagModName},
+		Filename: path.Join(nFlagDir, "Dockerfile"),
+		Tpl:      tpl.DockerFile,
+		Data:     tpl.DockerFileParam{BinName: nFlagModName},
 	}, {
 		Name:     "gitignore",
-		Filename: path.Join(flagProjectDir, ".gitignore"),
+		Filename: path.Join(nFlagDir, ".gitignore"),
 		Tpl:      tpl.GitIgnore,
 	}, {
 		Name:     "dockerIgnore",
-		Filename: path.Join(flagProjectDir, ".dockerignore"),
+		Filename: path.Join(nFlagDir, ".dockerignore"),
 		Tpl:      tpl.DockerIgnore,
 	}, {
 		Name:     "readme",
-		Filename: path.Join(flagProjectDir, "README.md"),
+		Filename: path.Join(nFlagDir, "README.md"),
 		Tpl:      tpl.Readme,
 	}, {
 		Name:     "dockerBuildScript",
-		Filename: path.Join(flagProjectDir, "t."+scriptSubfix),
+		Filename: path.Join(nFlagDir, "t."+scriptSubfix),
 		Tpl:      stpl,
 		Data: tpl.DockerBuildParam{
-			ContainerName: flagProjectDir + "-sc",
-			ImageTag:      flagProjectDir + ":latest",
+			ContainerName: nFlagDir + "-sc",
+			ImageTag:      nFlagDir + ":latest",
 			BuildArg:      "--build-arg config=config",
 			ExportPort:    "7788",
 		},
 	}, {
 		Name:     "swaggerScript",
-		Filename: path.Join(flagProjectDir, "gen-swagger."+scriptSubfix),
+		Filename: path.Join(nFlagDir, "docs."+scriptSubfix),
 		Tpl:      tpl.GenSwagger,
 	}}
 
 	// main.go
 	tasks = append(tasks, GenTask{
 		Name:     "main",
-		Filename: path.Join(flagProjectDir, "main.go"),
+		Filename: path.Join(nFlagDir, "main.go"),
 		Tpl:      tpl.MainGo,
 		Data: tpl.MainGoParam{
-			ModuleName: flagModName,
-			// AppList:      parseAppName(),
-			LogFileName:  flagProjectDir,
-			AppModelList: getRenderAppModel(),
+			ModuleName:  nFlagModName,
+			LogFileName: nFlagDir,
 		},
 	})
 
@@ -141,18 +138,10 @@ func Generate() (err error) {
 		Tpl:      tpl.RoutersGo,
 		Data: tpl.RouterParam{
 			ImportApps: parseAppName(),
-			Apps:       flagApps,
-			ModuleName: flagModName,
+			Apps:       nFlagApps,
+			ModuleName: nFlagModName,
 		},
 	})
-
-	// model/base.go
-	// tasks = append(tasks, GenTask{
-	// 	Name:     "baseModel",
-	// 	Filename: path.Join(apiBase, "model.go"),
-	// 	Tpl:      tpl.BaseModelGo,
-	// 	Data:     tpl.BackQuote{BQ: "`"},
-	// })
 
 	// api/base/request.go
 	tasks = append(tasks, GenTask{
@@ -162,61 +151,46 @@ func Generate() (err error) {
 		Data:     tpl.BackQuote{BQ: "`"},
 	})
 
-	// db
-	var (
-		// dbTask GenTask
-		cp = &tpl.ConfigParam{
-			DB:      strings.Title(_Postgres),
-			DbExist: true,
-			BQ:      "`",
-			JsonTag: strings.ToLower(_Postgres),
-			DbType:  "_Postgres",
-		}
-	)
-	if flagDb == _Mysql {
-		// 	dbTask = GenTask{
-		// 		Name:     _Mysql,
-		// 		Filename: path.Join(internalDb, "mysql.go"),
-		// 		Tpl:      tpl.DbMysql,
-		// 		Data:     tpl.ModuleParam{ModuleName: flagModName},
-		// 	}
-		//
-		cp.DB = strings.Title(_Mysql)
-		cp.JsonTag = _Mysql
-		cp.DbType = "_Mysql"
-		//
-	} else {
-		// 	dbTask = GenTask{
-		// 		Name:     _Postgres,
-		// 		Filename: path.Join(internalDb, "postgres.go"),
-		// 		Tpl:      tpl.DbPostgres,
-		// 		Data:     tpl.ModuleParam{ModuleName: flagModName},
-		// 	}
+	db := _Postgres
+	if nFlagDb == _Mysql {
+		db = _Mysql
 	}
+
 	tasks = append(tasks, GenTask{
 		Name:     "yamlConfig",
 		Filename: path.Join(confDir, "config.yaml"),
 		Tpl:      tpl.ConfigYaml,
 		Data: tpl.ConfigYamlParam{
-			Db:     cp.JsonTag,
-			DbName: flagProjectDir,
+			Db:     db,
+			DbName: nFlagDir,
 		},
 	})
-	// tasks = append(tasks, dbTask)
+
+	// model/model.go
+	tasks = append(tasks, GenTask{
+		Name:     "modelInit",
+		Filename: path.Join(modelDir, "model.go"),
+		Tpl:      tpl.ModelGo,
+		Data: tpl.ModelParam{
+			ModuleName:   nFlagModName,
+			AppModelList: getRenderAppModel(),
+			DbType:       db,
+		},
+	})
 
 	// internal/config.go
 	tasks = append(tasks, GenTask{
 		Name:     "config",
 		Filename: path.Join(internal, "config.go"),
 		Tpl:      tpl.ConfigGo,
-		Data:     cp,
+		Data:     tpl.BackQuote{BQ: "`"},
 	})
 
 	generateAllTemplateFiles(tasks)
 
-	for _, i := range flagApps {
+	for _, i := range nFlagApps {
 		appName := strings.ToLower(i)
-		generateApp(modelDir, apiDir, appName, flagModName)
+		generateApp(modelDir, apiDir, appName, nFlagModName)
 	}
 
 	goModTidy(session)

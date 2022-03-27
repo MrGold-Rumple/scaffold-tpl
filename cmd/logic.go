@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -10,6 +12,8 @@ import (
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/wuruipeng404/scaffold-tpl/console"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type GenTask struct {
@@ -34,25 +38,25 @@ func checkDir(cd string) {
 }
 
 func _ParamCheck() error {
-	checkDir(flagProjectDir)
+	checkDir(nFlagDir)
 
 	// go mod 名称等于空时 默认等于文件夹名称
-	if flagModName == "" {
-		flagModName = flagProjectDir
+	if nFlagModName == "" {
+		nFlagModName = nFlagDir
 	}
 
 	// 检察数据库参数
-	switch flagDb {
+	switch nFlagDb {
 	case _PostgresFlag, _Mysql, _Postgres:
 	default:
 		return errors.New("db only support pg(postgres) and mysql")
 	}
 	// 需要初始化的app
 	var lowerApps []string
-	for _, i := range flagApps {
+	for _, i := range nFlagApps {
 		lowerApps = append(lowerApps, strings.ToLower(i))
 	}
-	flagApps = lowerApps
+	nFlagApps = lowerApps
 	return nil
 }
 
@@ -72,7 +76,7 @@ func newFile(filename string, content string) {
 	}
 }
 
-func generateFile(tplName, filename, tpl string, data interface{}) {
+func generateFile(tplName, filename, tpl string, data any) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -121,7 +125,7 @@ func makeAllDir(dirs []string) {
 func goModInit(session *sh.Session) {
 	var err error
 	console.Info("start init git repo and go mod")
-	if err = session.Command("go", "mod", "init", flagModName).Run(); err != nil {
+	if err = session.Command("go", "mod", "init", nFlagModName).Run(); err != nil {
 		console.Fatal("go mod init error:%s", err)
 	}
 
@@ -143,16 +147,16 @@ func goModTidy(session *sh.Session) {
 
 func parseAppName() []string {
 	var result []string
-	for _, n := range flagApps {
-		result = append(result, fmt.Sprintf("%s/api/%s", flagModName, n))
+	for _, n := range nFlagApps {
+		result = append(result, fmt.Sprintf("%s/api/%s", nFlagModName, n))
 	}
 	return result
 }
 
 func getRenderAppModel() []string {
 	var result []string
-	for _, n := range flagApps {
-		result = append(result, fmt.Sprintf("model.%s", strings.Title(n)))
+	for _, n := range nFlagApps {
+		result = append(result, Title(n))
 	}
 	return result
 }
@@ -169,4 +173,51 @@ func swaggerInit(session *sh.Session) (err error) {
 		return fmt.Errorf("generate swagger file error:%s", err)
 	}
 	return nil
+}
+
+func Title(v string) string {
+	c := cases.Title(language.Und)
+	return c.String(v)
+}
+
+func File2lines(filePath string) ([]string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	return LinesFromReader(f)
+}
+
+func LinesFromReader(r io.Reader) ([]string, error) {
+	var lines []string
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return lines, nil
+}
+
+func InsertStringToFile(path, str string, index int) error {
+	lines, err := File2lines(path)
+	if err != nil {
+		return err
+	}
+
+	fileContent := ""
+	for i, line := range lines {
+		if i == index {
+			fileContent += str
+		}
+		fileContent += line
+		fileContent += "\n"
+	}
+
+	return ioutil.WriteFile(path, []byte(fileContent), defaultFilePerm)
 }
