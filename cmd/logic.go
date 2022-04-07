@@ -148,7 +148,7 @@ func goModTidy(session *sh.Session) {
 func parseAppName() []string {
 	var result []string
 	for _, n := range nFlagApps {
-		result = append(result, fmt.Sprintf("%s/api/%s", nFlagModName, n))
+		result = append(result, fmt.Sprintf("%s/apps/api/%s", nFlagModName, n))
 	}
 	return result
 }

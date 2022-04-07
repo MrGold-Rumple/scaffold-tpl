@@ -18,7 +18,7 @@ package {{.AppName}}
 
 import (
 	"github.com/wuruipeng404/scaffold/swag"
-	"{{.ModuleName}}/model"
+	"{{.ModuleName}}/apps/model"
 )
 
 type (
@@ -69,7 +69,7 @@ package {{.AppName}}
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wuruipeng404/scaffold"
-	"{{.ModuleName}}/api/protocol"
+	"{{.ModuleName}}/apps/protocol"
 )
 
 type Controller struct {

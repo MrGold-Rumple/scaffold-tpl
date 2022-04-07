@@ -17,7 +17,7 @@ package main
 import (
 	"github.com/wuruipeng404/scaffold"
 	"github.com/wuruipeng404/scaffold/logger"
-	"{{.ModuleName}}/api"
+	"{{.ModuleName}}/apps/api"
 )
 
 func init() {
@@ -237,6 +237,10 @@ type ModelParam struct {
 	AppModelList []string `json:"app_model_list"`
 	DbType       string   `json:"db_type"`
 }
+
+const DalGo = `
+package dal
+`
 
 const ModelGo = `
 package model

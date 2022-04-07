@@ -37,16 +37,22 @@ func init() {
 	rootCmd.AddCommand(appCmd)
 }
 
-func generateApp(modelDir, apiDir, name, modName string) {
+// modelDir /apps/model
+// apiDir /apps/api
+// name app‘s name
+// modName go mod name
+func generateApp(appsDir, name, modName string) {
 
 	appName := strings.ToLower(name)
 	appTitle := Title(appName)
 
+	apiDir := path.Join(appsDir, "api")
+	dalDir := path.Join(appsDir, "dal")
+	modelDir := path.Join(appsDir, "model")
 	appDir := path.Join(apiDir, appName)
 	checkDir(appDir)
 
-	// files := []string{"controller.go", "dal.go", "protocol.go"}
-
+	// files := []string{"controller.go", "protocol.go"}
 	appParam := tpl.AppParam{
 		AppName:    appName,
 		AppTitle:   appTitle,
@@ -55,13 +61,15 @@ func generateApp(modelDir, apiDir, name, modName string) {
 	}
 
 	tasks := []GenTask{{
-		Name:     "Dal",
-		Filename: path.Join(appDir, "dal.go"),
-		Tpl:      tpl.GoOnlyPkgFile,
-		Data: tpl.GoPkgFileParam{
-			PkgName: appName,
-			Comment: "// define your DQL DML",
-		},
+		Name:     "dal",
+		Filename: path.Join(dalDir, appName+".go"),
+		Tpl:      tpl.DalGo,
+		// Filename: path.Join(appDir, "dal.go"),
+		// Tpl:      tpl.GoOnlyPkgFile,
+		// Data: tpl.GoPkgFileParam{
+		// 	PkgName: appName,
+		// 	Comment: "// define your DQL DML",
+		// },
 	}, {
 		Name:     "protocol",
 		Filename: path.Join(appDir, "protocol.go"),
@@ -132,9 +140,9 @@ func NewApps() error {
 
 	for _, a := range aFlagApps {
 
-		modDir := path.Join(aFlagDir, "model")
+		modDir := path.Join(aFlagDir, "apps/model")
 
-		generateApp(modDir, path.Join(aFlagDir, "api"), strings.ToLower(a), modName)
+		generateApp(path.Join(aFlagDir, "apps"), strings.ToLower(a), modName)
 
 		content := fmt.Sprintf("        new(%s),\n", Title(a))
 

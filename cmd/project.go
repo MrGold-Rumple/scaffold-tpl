@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"path"
 	"runtime"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/wuruipeng404/scaffold-tpl/console"
@@ -67,14 +66,17 @@ func Generate() (err error) {
 	console.Info(fmt.Sprintf("start init project %s, db %+v, nosql %+v, module name %s, apps %+v",
 		nFlagDir, nFlagDb, nFlagNosqlList, nFlagModName, nFlagApps))
 
-	apiDir := path.Join(nFlagDir, "api")
-	apiProtocol := path.Join(apiDir, "protocol")
-	confDir := path.Join(nFlagDir, "config")
-	docsDir := path.Join(nFlagDir, "docs")
-	internal := path.Join(nFlagDir, "internal")
-	modelDir := path.Join(nFlagDir, "model")
+	appsDir := path.Join(nFlagDir, "apps")        // /apps
+	apiDir := path.Join(appsDir, "api")           // /apps/api
+	protocolDir := path.Join(appsDir, "protocol") // /apps/protocol
+	modelDir := path.Join(appsDir, "model")       // /apps/model
+	dalDir := path.Join(appsDir, "dal")           // /apps/dal
 
-	needMkDirs := []string{apiProtocol, modelDir, confDir, docsDir, internal}
+	confDir := path.Join(nFlagDir, "config")       // /config
+	docsDir := path.Join(nFlagDir, "docs")         // /docs
+	internalDir := path.Join(nFlagDir, "internal") // /internal
+
+	needMkDirs := []string{apiDir, protocolDir, modelDir, dalDir, confDir, docsDir, internalDir}
 
 	console.Info(fmt.Sprintf("start create all dir %+v", needMkDirs))
 	makeAllDir(needMkDirs)
@@ -131,10 +133,10 @@ func Generate() (err error) {
 		},
 	})
 
-	// api/routers.go
+	// /apps/api/router.go
 	tasks = append(tasks, GenTask{
-		Name:     "routers",
-		Filename: path.Join(apiDir, "routers.go"),
+		Name:     "router",
+		Filename: path.Join(apiDir, "router.go"),
 		Tpl:      tpl.RoutersGo,
 		Data: tpl.RouterParam{
 			ImportApps: parseAppName(),
@@ -143,10 +145,10 @@ func Generate() (err error) {
 		},
 	})
 
-	// api/base/request.go
+	// /apps/protocol/request.go
 	tasks = append(tasks, GenTask{
 		Name:     "baseRequest",
-		Filename: path.Join(apiProtocol, "request.go"),
+		Filename: path.Join(protocolDir, "request.go"),
 		Tpl:      tpl.BaseRequestGo,
 		Data:     tpl.BackQuote{BQ: "`"},
 	})
@@ -166,7 +168,7 @@ func Generate() (err error) {
 		},
 	})
 
-	// model/model.go
+	// /apps/model/model.go
 	tasks = append(tasks, GenTask{
 		Name:     "modelInit",
 		Filename: path.Join(modelDir, "model.go"),
@@ -178,10 +180,10 @@ func Generate() (err error) {
 		},
 	})
 
-	// internal/config.go
+	// /internal/config.go
 	tasks = append(tasks, GenTask{
 		Name:     "config",
-		Filename: path.Join(internal, "config.go"),
+		Filename: path.Join(internalDir, "config.go"),
 		Tpl:      tpl.ConfigGo,
 		Data:     tpl.BackQuote{BQ: "`"},
 	})
@@ -189,8 +191,7 @@ func Generate() (err error) {
 	generateAllTemplateFiles(tasks)
 
 	for _, i := range nFlagApps {
-		appName := strings.ToLower(i)
-		generateApp(modelDir, apiDir, appName, nFlagModName)
+		generateApp(appsDir, i, nFlagModName)
 	}
 
 	goModTidy(session)
