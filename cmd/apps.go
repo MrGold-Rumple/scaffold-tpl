@@ -1,6 +1,6 @@
 /*
 * @Author: Rumple
-* @Email: ruipeng.wu@cyclone-robotics.com
+* @Email: wrp357711589@163.com
 * @DateTime: 2022/3/1 15:41
  */
 
@@ -14,8 +14,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/MrGold-Rumple/scaffold-tpl/tpl"
 	"github.com/spf13/cobra"
-	"github.com/wuruipeng404/scaffold-tpl/tpl"
 )
 
 var appCmd = &cobra.Command{

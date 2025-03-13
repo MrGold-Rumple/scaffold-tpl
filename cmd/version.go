@@ -1,14 +1,14 @@
 /*
 * @Author: Rumple
-* @Email: ruipeng.wu@cyclone-robotics.com
+* @Email: wrp357711589@163.com
 * @DateTime: 2022/2/21 17:56
  */
 
 package cmd
 
 import (
+	"github.com/MrGold-Rumple/scaffold-tpl/console"
 	"github.com/spf13/cobra"
-	"github.com/wuruipeng404/scaffold-tpl/console"
 )
 
 var versionCmd = &cobra.Command{

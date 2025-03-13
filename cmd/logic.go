@@ -10,8 +10,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/MrGold-Rumple/scaffold-tpl/console"
 	"github.com/codeskyblue/go-sh"
-	"github.com/wuruipeng404/scaffold-tpl/console"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

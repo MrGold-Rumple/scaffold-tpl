@@ -1,6 +1,6 @@
 /*
 * @Author: Rumple
-* @Email: ruipeng.wu@cyclone-robotics.com
+* @Email: wrp357711589@163.com
 * @DateTime: 2022/2/28 14:43
  */
 
@@ -37,4 +37,4 @@ scripts/
 .git
 `
 
-const Readme = `### PowerBy https://github.com/wuruipeng404/scaffold-tpl`
+const Readme = `### PowerBy https://github.com/MrGold-Rumple/scaffold-tpl`

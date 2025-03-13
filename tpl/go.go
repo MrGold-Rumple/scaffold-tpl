@@ -1,6 +1,6 @@
 /*
 * @Author: Rumple
-* @Email: ruipeng.wu@cyclone-robotics.com
+* @Email: wrp357711589@163.com
 * @DateTime: 2022/2/28 14:44
  */
 
@@ -15,8 +15,8 @@ const MainGo = `
 package main
 
 import (
-	"github.com/wuruipeng404/scaffold"
-	"github.com/wuruipeng404/scaffold/logger"
+	"github.com/MrGold-Rumple/scaffold"
+	"github.com/MrGold-Rumple/scaffold/logger"
 	"{{.ModuleName}}/apps/api"
 )
 
@@ -54,8 +54,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/wuruipeng404/scaffold/orm"
-	"github.com/wuruipeng404/scaffold/util"
+	"github.com/MrGold-Rumple/scaffold/orm"
+	"github.com/MrGold-Rumple/scaffold/util"
 	"gopkg.in/yaml.v2"
 )
 
@@ -155,7 +155,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/wuruipeng404/scaffold"
+	"github.com/MrGold-Rumple/scaffold"
 	{{- range $i,$v := .ImportApps}}
 	"{{$v -}}"
 	{{- end}}
@@ -248,7 +248,7 @@ package model
 import (
 	"log"
 
-	"github.com/wuruipeng404/scaffold/orm"
+	"github.com/MrGold-Rumple/scaffold/orm"
 	"{{.ModuleName}}/internal"
 )
 

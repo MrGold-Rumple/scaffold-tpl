@@ -1,6 +1,6 @@
 /*
 * @Author: Rumple
-* @Email: ruipeng.wu@cyclone-robotics.com
+* @Email: wrp357711589@163.com
 * @DateTime: 2022/3/2 9:52
  */
 
@@ -17,7 +17,7 @@ const AppProtocolGO = `
 package {{.AppName}}
 
 import (
-	"github.com/wuruipeng404/scaffold/swag"
+	"github.com/MrGold-Rumple/scaffold/swag"
 	"{{.ModuleName}}/apps/model"
 )
 
@@ -55,7 +55,7 @@ const AppModelGO = `
 package model
 
 import (
-	"github.com/wuruipeng404/scaffold/orm"
+	"github.com/MrGold-Rumple/scaffold/orm"
 )
 
 type {{.AppTitle}} struct {
@@ -68,7 +68,7 @@ package {{.AppName}}
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wuruipeng404/scaffold"
+	"github.com/MrGold-Rumple/scaffold"
 	"{{.ModuleName}}/apps/protocol"
 )
 

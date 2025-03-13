@@ -2,7 +2,7 @@
 
 Generate a standard web project command line scaffold tool
 
-Base on [github.com/wuruipeng404/scaffold](github.com/wuruipeng404/scaffold)
+Base on [github.com/MrGold-Rumple/scaffold](github.com/MrGold-Rumple/scaffold)
 
 - Usage
   ![usage](./images/usage.png)
